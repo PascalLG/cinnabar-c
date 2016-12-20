@@ -51,7 +51,7 @@ static void _debug(const char * message, ...) {
 
 //--------------------------------------------------------------
 // Erase a memory chunk. We cannot use a regular memset here,
-// because it will probably be optimized away by most compilers.
+// because it would probably be optimized away by most compilers.
 //--------------------------------------------------------------
 
 static void zeromem(void * ptr, size_t length) {
