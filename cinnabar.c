@@ -684,8 +684,10 @@ static void * bigint_barrett_reduce(const CTX_BARRETT * ctx, const BIGINT * x) {
         BIGINT * t2 = bigint_multiply(t1, ctx->modulus);
         bigint_free(t1);
         t = bigint_subtract(x, t2);
+        bigint_free(t2);
     }
-    
+    bigint_free(mul);
+
     if (bigint_compare(ctx->modulus, t) <= 0) {
         BIGINT * t3 = bigint_subtract(t, ctx->modulus);
         bigint_free(t);
