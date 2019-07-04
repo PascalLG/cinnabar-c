@@ -1,8 +1,30 @@
+//========================================================================
+// Cinnabar - Test Suite
+// Copyright (c) 2016, Pascal Levy
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in
+// all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+// THE SOFTWARE.
+//========================================================================
 
 #include <math.h>
 #include "../cinnabar.c"
 
-static char private[] =     "-----BEGIN RSA PRIVATE KEY-----\n"
+static char privatekey[] =  "-----BEGIN RSA PRIVATE KEY-----\n"
                             "MIIEpAIBAAKCAQEAq9Sl9byoS1h4UmemYVUc31Jd9p0CyFZXgLVhhTm8lLq98v51\n"
                             "uOO7JY4ClKp8WmZ/Hv1RDkxlYtqvrF3zJNgWjgJogQHiV4TdjXtr+CC+7QN9qkTI\n"
                             "k9AWdT1ocL/wzAL6lloqDXYWob3Dl8A3ylrH6qAAumh6GMpq6XwbGM+jr4kLGm4P\n"
@@ -31,7 +53,7 @@ static char private[] =     "-----BEGIN RSA PRIVATE KEY-----\n"
                             "-----END RSA PRIVATE KEY-----\n";
 
 
-static char public[] =      "-----BEGIN PUBLIC KEY-----\n"
+static char publickey[] =   "-----BEGIN PUBLIC KEY-----\n"
                             "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAq9Sl9byoS1h4UmemYVUc\n"
                             "31Jd9p0CyFZXgLVhhTm8lLq98v51uOO7JY4ClKp8WmZ/Hv1RDkxlYtqvrF3zJNgW\n"
                             "jgJogQHiV4TdjXtr+CC+7QN9qkTIk9AWdT1ocL/wzAL6lloqDXYWob3Dl8A3ylrH\n"
@@ -50,6 +72,8 @@ static char signature[] =   "5b23bfbe96c5a0c28508399cf3d9c38d12d6cc5b06c949ff6e5
                             "7849e0bacc87373aedc37d8fb17badcd86f80ef74e21501e73d401ddd97830da"
                             "f0cbbc03b5dec3dc2b565742e0e36684b4570598c15a4f83b7c200bd93edb561";
 
+//--------------------------------------------------------------
+
 static int test_sha256(const char * message, const char * expected) {
 	static char	hex[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
@@ -66,6 +90,8 @@ static int test_sha256(const char * message, const char * expected) {
 
     return 0;
 }
+
+//--------------------------------------------------------------
 
 static BIGINT * bigint_fromstring(const char * num, int radix) {
 	size_t el = (size_t) (strlen(num) * log(radix) / log(2.0));
@@ -103,6 +129,8 @@ static BIGINT * bigint_fromstring(const char * num, int radix) {
     bigint_clamp(b);
     return b;
 }
+
+//--------------------------------------------------------------
 
 static int test_bigint_muldiv(const char * a, const char * b, const char * r) {
     int err = 0;
@@ -145,6 +173,8 @@ static int test_bigint_muldiv(const char * a, const char * b, const char * r) {
     return err;
 }
 
+//--------------------------------------------------------------
+
 static int test_bigint_subtract(const char * a, const char * b, const char * r) {
     int err = 0;
     BIGINT * ba = bigint_fromstring(a, 10);
@@ -161,6 +191,8 @@ static int test_bigint_subtract(const char * a, const char * b, const char * r) 
     bigint_free(br2);
     return err;
 }
+
+//--------------------------------------------------------------
 
 static int test_bigint_expmod(const char * b, const char * e, const char * m, const char * r, int radix) {
     BIGINT * bb = bigint_fromstring(b, radix);
@@ -180,10 +212,12 @@ static int test_bigint_expmod(const char * b, const char * e, const char * m, co
     return 0;
 }
 
+//--------------------------------------------------------------
+
 static int test_signature(const char * message, const char * signature) {
     CNBR_SIGNATURE sign;
 
-    CnbrStatus status = CnbrSignature(&sign, message, strlen(message), private);
+    CnbrStatus status = CnbrSignature(&sign, message, strlen(message), privatekey);
     if (status != CnbrSuccess) {
         printf("failed: signature returned %d\n", (int) status);
         return 1;
@@ -203,7 +237,7 @@ static int test_signature(const char * message, const char * signature) {
         }
     }
 
-    status = CnbrVerifySignature(sign.signature_data, sign.signature_length, message, strlen(message), public);
+    status = CnbrVerifySignature(sign.signature_data, sign.signature_length, message, strlen(message), publickey);
     if (status != CnbrSuccess) {
         printf("failed: check signature returned %d\n", (int) status);
         return 1;
@@ -212,6 +246,8 @@ static int test_signature(const char * message, const char * signature) {
     CnbrEraseSignature(&sign);
     return 0;
 }
+
+//--------------------------------------------------------------
 
 int main(int argc, const char * argv[]) {
     int err = 0;
@@ -269,3 +305,5 @@ int main(int argc, const char * argv[]) {
 
     return err;
 }
+
+//========================================================================

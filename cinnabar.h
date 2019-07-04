@@ -21,9 +21,10 @@
 // THE SOFTWARE.
 //========================================================================
 
-#ifndef CINNABAR_H
-#define CINNABAR_H
+#ifndef __CINNABAR_H__
+#define __CINNABAR_H__
 
+#include <stddef.h>
 #include <stdint.h>
 
 //--------------------------------------------------------------
@@ -51,10 +52,20 @@ typedef struct _CNBR_SIGNATURE {
     CNBR_SIGNATURE;
 
 //--------------------------------------------------------------
+// Signing functions.
+//--------------------------------------------------------------
+
+#if defined (__cplusplus)
+extern "C" {
+#endif
 
 CnbrStatus  CnbrSignature(CNBR_SIGNATURE * signature, const void * document_data, size_t document_length, const char * pem_private_key);
 CnbrStatus  CnbrVerifySignature(const uint8_t * signature_data, size_t signature_length, const void * document_data, size_t document_length, const char * pem_public_key);
 CnbrStatus  CnbrEraseSignature(CNBR_SIGNATURE * signature);
+
+#if defined (__cplusplus)
+}
+#endif
 
 //--------------------------------------------------------------
 

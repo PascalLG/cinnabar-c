@@ -19,7 +19,7 @@ You can generate a private key by typing the following command in a terminal:
 
 ``openssl genrsa -out private.pem 2048``
 
-That generates a 2048-bit RSA pair and write them to a file named ``private.pem``. From this private key, you can then ask openssl to generate a public key:
+This generates a 2048-bit RSA pair and write it to a file named ``private.pem``. From this private key, you can then ask openssl to generate a public key:
 
 ``openssl rsa -in private.pem -outform PEM -pubout -out public.pem``
 
@@ -64,6 +64,42 @@ If the signature is valid, the function returns ``CnbrSuccess``. If an error occ
 
 A valid signature ensures authentication, non-repudiation and integrity: it gives a strong indication that the message was created by a known sender, that the sender cannot deny having signed the message, and that the message was not altered afterwards.
 
+## Tests
+
+The ``test`` folder contains a small application that runs unit tests on several functions of ``cinnabar.c``. (Note: to allow testing of private functions and data structures, the code for this test application does not link against the cinnabar library but directly includes ``cinnabar.c``. Of course, this is not how you are supposed to use ``cinnabar.c`` in your own projects.)
+
+To run the test suite on macOS:
+
+* Open the Xcode project file that resides in the same folder
+* Build and run the project
+
+For other platforms, a ``CMakeFileLists.txt`` file is provided. To run the test suite:
+
+* Change to the ``test`` directory
+* Create a build subdirectory here and jump to it: ``mkdir build && cd build``
+* Generate a makefile: ``cmake -DCMAKE_BUILD_TYPE=Release ..``
+* Build the project: ``make``
+* Run it: ``./CnbrTest``
+
 ## Sample code
 
-Work in progress.
+The ``sample`` folder contains an application implementing basic file signature and verification. (Note: this is just a minimal sample to demonstrate ``cinnabar`` usage. A real life application should have better handling of errors and corner cases. For example, it should back up files before modifying them.)
+
+A ``CMakeFileLists.txt`` file is provided to build this sample:
+
+* Change to the ``sample`` directory
+* Create a build subdirectory here and jump to it: ``mkdir build && cd build``
+* Generate a makefile: ``cmake -DCMAKE_BUILD_TYPE=Release ..``
+* Build the project: ``make``
+
+You also have to generate ``private.pem`` and ``public.pem`` key files, as explained above. Then, to sign a file named ``foo.txt`` for example:
+
+``rsa-sign sign private.pem foo.txt``
+
+This appends to ``foo.txt`` a small trailer containing the signature and some management information. To verify the signature and hence the file was not tampered:
+
+``rsa-sign verify public.pem foo.txt``
+
+You can also remove the trailer containing the signature and restore the original file by adding the ``-r`` option:
+
+``rsa-sign verify -r public.pem foo.txt``

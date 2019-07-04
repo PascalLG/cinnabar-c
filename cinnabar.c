@@ -93,7 +93,7 @@ static uint8_t * base64_decode(const char * data, size_t in_length, size_t * out
     int count = 0, ending = 0;
 
     for (size_t i = 0; i < in_length; i++) {
-        uint8_t v = decode_table[data[i]];
+        uint8_t v = decode_table[(uint8_t) data[i]];
         if (v > 65) {
             debug("base64: illegal character %02X in input stream", (int) (unsigned char) data[i]);
             free(output);
@@ -143,15 +143,15 @@ static uint8_t * base64_decode(const char * data, size_t in_length, size_t * out
 #define SHR(x, n)		(x >> n)
 #define ROTR(x, n)		((x >> n) | (x << (32 - n)))
 
-#define S0(x)			(ROTR(x, 7) ^ ROTR(x, 18) ^  SHR(x, 3))
-#define S1(x)			(ROTR(x, 17) ^ ROTR(x, 19) ^  SHR(x, 10))
+#define S0(x)			(ROTR(x, 7) ^ ROTR(x, 18) ^ SHR(x, 3))
+#define S1(x)			(ROTR(x, 17) ^ ROTR(x, 19) ^ SHR(x, 10))
 #define S2(x)			(ROTR(x, 2) ^ ROTR(x, 13) ^ ROTR(x, 22))
 #define S3(x)			(ROTR(x, 6) ^ ROTR(x, 11) ^ ROTR(x, 25))
 
 #define F0(x, y, z)		((x & y) | (z & (x | y)))
 #define F1(x, y, z)		(z ^ (x & (y ^ z)))
 
-#define R(t)			( W[t] = S1(W[t -  2]) + W[t -  7] + S0(W[t - 15]) + W[t - 16] )
+#define R(t)			( W[t] = S1(W[t - 2]) + W[t - 7] + S0(W[t - 15]) + W[t - 16] )
 
 #define P(a, b, c, d, e, f, g, h, x, K)			\
 {												\
@@ -287,6 +287,7 @@ static void sha256_update(CTX_SHA256 * ctx, const void * data, size_t length) {
 	} else {
 		memcpy(ctx->buffer + rem, ptr, length);
 	}
+
 	ctx->count += length;
 }
 
@@ -412,10 +413,10 @@ static size_t bigint_log256(BIGINT * a) {
 }
 
 //--------------------------------------------------------------
-// PKCS Octet Stream To Integer Primitive. It creates a big
-// integer by interpreting a stream of bytes as a base 256 big
-// endian number and converting it to our internal representation,
-// i.e., base 2^32 little endian.
+// PKCS Octet Stream To Integer. It creates a big integer by
+// interpreting a stream of bytes as a base 256 big endian number
+// and converting it to our internal representation, i.e.,
+// base 2^32 little endian.
 //--------------------------------------------------------------
 
 static BIGINT * bigint_os2ip(const uint8_t * data, size_t length) {
@@ -432,6 +433,9 @@ static BIGINT * bigint_os2ip(const uint8_t * data, size_t length) {
     return r;
 }
 
+//--------------------------------------------------------------
+// Integer to PKCS Octet Stream. It converts a big integer to
+// a base 256 big endian number.
 //--------------------------------------------------------------
 
 static void bigint_i2osp(const BIGINT * a, uint8_t * data, size_t length) {
@@ -652,7 +656,7 @@ static void bigint_barrett_free(CTX_BARRETT * ctx) {
 // Barrett reduction.
 //--------------------------------------------------------------
 
-static void * bigint_barrett_reduce(const CTX_BARRETT * ctx, const BIGINT * x) {
+static BIGINT * bigint_barrett_reduce(const CTX_BARRETT * ctx, const BIGINT * x) {
     BIGINT * mul = bigint_multiply(x, ctx->factor);
     BIGINT * t;
 
@@ -835,7 +839,7 @@ static ASN1 * asn1_recursive_parse(const uint8_t * data, size_t available, size_
 
     ASN1 * obj = (ASN1 *) malloc(sizeof(ASN1));
     zeromem(obj, sizeof(ASN1));
-    obj->type = code;
+    obj->type = (Asn1Type) code;
 
     if (code == Asn1TypeInteger) {
         obj->u.bigint = bigint_os2ip(data + pos, length);
@@ -1127,7 +1131,7 @@ CnbrStatus CnbrVerifySignature(const uint8_t * signature_data, size_t signature_
     if (!key) {
         return CnbrInvalidPublicKey;
     }
-    
+
     ASN1 * pubkey = key->u.sequence.items[1]->u.bitstring.encapsulated;
     size_t modsize = bigint_log256(pubkey->u.sequence.items[0]->u.bigint);
     if (modsize != signature_length) {
